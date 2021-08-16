@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import get_user_model
 
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import views, status, viewsets
+from rest_framework import serializers, views, status, viewsets, generics
 from rest_framework.response import Response
 
 from .models import Post, Comment
@@ -13,32 +13,43 @@ from .permissions import ReadOnly
 User = get_user_model()
 
 
-class StatusOkView(views.APIView):
-    permission_classes = [ReadOnly | IsAuthenticated]
-
-    def get(self, request):
-        query = request.GET.get('query')
-
-        return Response({'status': 'OK'}, status=status.HTTP_200_OK)
-
-
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [ReadOnly | IsAuthenticated]
 
 
-class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+class ThreeLayerComment(views.APIView):
     permission_classes = [ReadOnly | IsAuthenticated]
 
-    def get_queryset(self):
-        post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
-        queryset = Comment.objects.filter(post=post)
-        return queryset
+    def get(self, request, post_id, comment_id):
+        post = get_object_or_404(Post, pk=post_id)
+        three_comment = get_object_or_404(
+            Comment, pk=comment_id, post=post, depth=3)
+        data = Comment.get_tree(parent=three_comment)
 
-    def perform_create(self, serializer):
-        post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
-        serializer.save(author=self.request.user, post=post)
-        return serializer
+        return Response({'childrens': data})
+
+
+class CommentListView(generics.ListAPIView):
+    permission_classes = [ReadOnly | IsAuthenticated]
+
+    def get(self, request, post_id):
+        post = get_object_or_404(Post, pk=post_id)
+        result = Comment.get_comments_tree(parent=post.root_comment, custom_depth=4)
+        result =result[0]['children']
+
+        return Response({'comments': result})
+
+
+class ThreeLayerComment(views.APIView):
+    permission_classes = [ReadOnly | IsAuthenticated]
+
+    def get(self, request, post_id, comment_id):
+        post = get_object_or_404(Post, pk=post_id)
+        three_comment = get_object_or_404(
+            Comment, pk=comment_id, post=post, depth=4)
+        data = Comment.get_comments_tree(parent=three_comment)[0]
+
+        return Response({'children': data.get('children')})
+
