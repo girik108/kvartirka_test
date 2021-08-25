@@ -13,6 +13,16 @@ import toml
 from datetime import timedelta
 from pathlib import Path
 
+import environ
+
+
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+
+environ.Env.read_env()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,10 +34,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-npr^mi+l6(h%c5)8f&6@_v%=l%&eb1o&@rv%ab4d4yj_i4ypyl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver', 'web']
 
 # Application definition
 
@@ -42,7 +51,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'treebeard',
-    'debug_toolbar',
     'drf_yasg',
 ]
 
@@ -54,8 +62,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 ]
+
+if DEBUG:
+    INSTALLED_APPS += ['debug_toolbar', ]
+    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
+
 
 ROOT_URLCONF = 'kvartirka.urls'
 
@@ -89,6 +102,12 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+# DATABASES = {
+#     # read os.environ['DATABASE_URL'] and raises ImproperlyConfigured exception if not found
+#     'default': env.db(),
+#     # read os.environ['SQLITE_URL']
+#     'extra': env.db('SQLITE_URL', default=f'sqlite:////tmp/my-tmp-sqlite.db')
+# }
 
 
 # Password validation
@@ -152,9 +171,9 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     # Устанавливаем срок жизни токена
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-   'AUTH_HEADER_TYPES': ('Bearer',),
-} 
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 
 INTERNAL_IPS = [
     # ...
@@ -162,8 +181,17 @@ INTERNAL_IPS = [
     # ...
 ]
 
+STATIC_URL = '/static/'
+# теперь логотип можно будет запросить по адресу sitename.ex**/static/**images/logo.png
+#STATICFILES_DIRS = ('data/',)
+# задаём адрес директории, куда командой *collectstatic* будет собрана вся статика
+STATIC_ROOT = Path.joinpath(BASE_DIR, 'static')
 
-PROJECT_DIR = BASE_DIR.parent
+MEDIA_URL = '/media/'
+MEDIA_ROOT = Path.joinpath(BASE_DIR, 'media')
+
+
+PROJECT_DIR = BASE_DIR
 pyproject_info = toml.load(Path.joinpath(PROJECT_DIR, 'pyproject.toml'))
 poetry_info = pyproject_info['tool']['poetry']
 

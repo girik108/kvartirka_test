@@ -109,6 +109,14 @@ Django = ">=2.2"
 sqlparse = ">=0.2.0"
 
 [[package]]
+name = "django-environ"
+version = "0.4.5"
+description = "Django-environ allows you to utilize 12factor inspired environment variables to configure your Django application."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "django-treebeard"
 version = "4.5.1"
 description = "Efficient tree implementations for Django"
@@ -171,6 +179,20 @@ uritemplate = ">=3.0.0"
 
 [package.extras]
 validation = ["swagger-spec-validator (>=2.1.0)"]
+
+[[package]]
+name = "gunicorn"
+version = "20.1.0"
+description = "WSGI HTTP Server for UNIX"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.extras]
+eventlet = ["eventlet (>=0.24.1)"]
+gevent = ["gevent (>=1.4.0)"]
+setproctitle = ["setproctitle"]
+tornado = ["tornado (>=0.2)"]
 
 [[package]]
 name = "idna"
@@ -410,7 +432,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b5854f3fad90116a856e613f1e815734293b24c7a78dd36512300ce995f6db05"
+content-hash = "5e4e7c10506a68052b050a00b57aef305801ff3b43956b5ecb7113c4554cfee3"
 
 [metadata.files]
 asgiref = [
@@ -449,6 +471,10 @@ django-debug-toolbar = [
     {file = "django-debug-toolbar-3.2.2.tar.gz", hash = "sha256:8c5b13795d4040008ee69ba82dcdd259c49db346cf7d0de6e561a49d191f0860"},
     {file = "django_debug_toolbar-3.2.2-py3-none-any.whl", hash = "sha256:d7bab7573fab35b0fd029163371b7182f5826c13da69734beb675c761d06a4d3"},
 ]
+django-environ = [
+    {file = "django-environ-0.4.5.tar.gz", hash = "sha256:6c9d87660142608f63ec7d5ce5564c49b603ea8ff25da595fd6098f6dc82afde"},
+    {file = "django_environ-0.4.5-py2.py3-none-any.whl", hash = "sha256:c57b3c11ec1f319d9474e3e5a79134f40174b17c7cc024bbb2fad84646b120c4"},
+]
 django-treebeard = [
     {file = "django-treebeard-4.5.1.tar.gz", hash = "sha256:80150017725239702054e5fa64dc66e383dc13ac262c8d47ee5a82cb005969da"},
     {file = "django_treebeard-4.5.1-py3-none-any.whl", hash = "sha256:7c2b1cdb1e9b46d595825186064a1228bc4d00dbbc186db5b0b9412357fba91c"},
@@ -464,6 +490,10 @@ djangorestframework-simplejwt = [
 drf-yasg = [
     {file = "drf-yasg-1.20.0.tar.gz", hash = "sha256:d50f197c7f02545d0b736df88c6d5cf874f8fea2507ad85ad7de6ae5bf2d9e5a"},
     {file = "drf_yasg-1.20.0-py2.py3-none-any.whl", hash = "sha256:8b72e5b1875931a8d11af407be3a9a5ba8776541492947a0df5bafda6b7f8267"},
+]
+gunicorn = [
+    {file = "gunicorn-20.1.0-py3-none-any.whl", hash = "sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e"},
+    {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
 ]
 idna = [
     {file = "idna-3.2-py3-none-any.whl", hash = "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a"},
