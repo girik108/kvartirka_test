@@ -15,7 +15,7 @@ User = get_user_model()
 class Post(models.Model):
     content = models.TextField()
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE,related_name='posts')
+        User, on_delete=models.CASCADE, related_name='posts')
     create_datetime = models.DateTimeField(
         'create datetime', auto_now_add=True, db_index=True)
     update_datetime = models.DateTimeField(
@@ -29,15 +29,16 @@ class Post(models.Model):
 
 class Comment(MP_Node):
     post = models.ForeignKey('Post', on_delete=models.CASCADE,
-                             related_name='tree_comments')
+                              related_name='comments')
     author = models.ForeignKey(User, on_delete=models.CASCADE,
-                               related_name='tree_comments')
+                               related_name='comments')
     content = models.TextField()
     create_datetime = models.DateTimeField(
         'create datetime', auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['create_datetime']
+
 
     @classmethod
     def get_comments_tree(cls, parent=None, keep_ids=True, custom_depth=None, authors=True):
@@ -54,7 +55,7 @@ class Comment(MP_Node):
             qset = qset.select_related('author')
 
         ret, lnk = [], {}
-        
+
         for pyobj in qset:
             newobj = RawCommentSerializer(pyobj).data
             path = newobj['path']

@@ -1,5 +1,8 @@
 from rest_framework import serializers
+from rest_framework.settings import reload_api_settings
+
 from .models import Post, Comment
+from .serializers_raw import UserSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -13,9 +16,9 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source='author.id')
+    author = serializers.ReadOnlyField(source='author.username', read_only=True)
 
     class Meta:
-        fields = ('id', 'content', 'author', 'post',
-                  'create_datetime',)
+        fields = ('id', 'content', 'author',
+                  'create_datetime')
         model = Comment
