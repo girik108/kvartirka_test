@@ -1,18 +1,15 @@
-from django.core.cache import cache
 from django.core.mail import send_mail
 from django.conf import settings
 
+from celery import shared_task
 
-from api.serializers import CommentSerializer
+from .utils import new_comment_notification
 from api.models import Comment, Post
 
 
-def test(node):
-    if node.get_children_count() == 0:
-        return CommentSerializer(node).data
-
-
-def new_comment_notification(post_id, comment_id, *args, **kwargs):
+@shared_task
+def send_email_notifocation(post_id, comment_id):
+    '''Send new comments notification'''
     post = Post.objects.select_related(
         'author', 'root_comment').get(id=post_id)
     comment = Comment.objects.select_related('author').get(id=comment_id)
@@ -27,3 +24,8 @@ def new_comment_notification(post_id, comment_id, *args, **kwargs):
         )
         return 'OK'
     return 'TASK END'
+
+
+@shared_task
+def add(x, y):
+    return x + y

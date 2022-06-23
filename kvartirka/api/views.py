@@ -1,5 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.core.cache import cache
+from django.http import HttpResponse
+
 
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework import serializers, views, mixins, viewsets, generics
@@ -11,6 +15,7 @@ from drf_yasg.utils import swagger_auto_schema
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from .permissions import AccessPermission
+from .tasks import send_email_notifocation, add
 
 
 User = get_user_model()
@@ -49,7 +54,7 @@ class PostViewSet(viewsets.ModelViewSet):
 class ThreeLayerComment(views.APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @swagger_auto_schema(tags=['Comments']) 
+    @swagger_auto_schema(tags=['Comments'])
     def get(self, request, post_id, comment_id):
         post = get_object_or_404(Post, pk=post_id)
         three_comment = get_object_or_404(
@@ -57,7 +62,6 @@ class ThreeLayerComment(views.APIView):
         data = Comment.get_comments_tree(parent=three_comment)[0]
 
         return Response({'children': data.get('children')})
-
 
 
 class CreateDeleteComment(mixins.RetrieveModelMixin,
@@ -69,7 +73,7 @@ class CreateDeleteComment(mixins.RetrieveModelMixin,
     serializer_class = CommentSerializer
     permission_classes = [AccessPermission]
 
-    @swagger_auto_schema(tags=['Comments']) 
+    @swagger_auto_schema(tags=['Comments'])
     def create(self, request, post_id):
         post = get_object_or_404(Post, pk=post_id)
         serializer = self.serializer_class(data=request.data)
@@ -82,12 +86,14 @@ class CreateDeleteComment(mixins.RetrieveModelMixin,
         else:
             new_comment = post.root_comment.add_child(
                 **serializer.data, author=request.user, post=post)
+            # send_email_notifocation.delay(post_id=post.id, comment_id=new_comment.id)
+            send_email_notifocation.delay(post.id, new_comment.id)
 
         serializer = CommentSerializer(new_comment)
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(tags=['Comments']) 
+    @swagger_auto_schema(tags=['Comments'])
     def list(self, request, post_id):
         post = get_object_or_404(Post, pk=post_id)
         result = Comment.get_comments_tree(
@@ -96,13 +102,27 @@ class CreateDeleteComment(mixins.RetrieveModelMixin,
 
         return Response({'comments': result})
 
-    @swagger_auto_schema(tags=['Comments']) 
+    @swagger_auto_schema(tags=['Comments'])
     def retrieve(self, request, post_id, pk=None):
         post = get_object_or_404(Post, pk=post_id)
         comment = get_object_or_404(Comment, pk=pk)
         serializer = CommentSerializer(comment)
         return Response(serializer.data)
 
-    @swagger_auto_schema(tags=['Comments']) 
+    @swagger_auto_schema(tags=['Comments'])
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+
+def send_test_email(request):
+    send_mail(
+        'Subject here',
+        'Here is the message.',
+        'from@example.com',
+        ['to@example.com'],
+        fail_silently=True,
+    )
+
+    last_seen = cache.get(f'seen_{request.user.username}')
+
+    return HttpResponse(last_seen)

@@ -42,6 +42,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver', 'web']
 
 INSTALLED_APPS = [
     'api',
+    'app_user',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -62,7 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
+    'app_user.middleware.ActiveUserMiddleware',
 ]
 
 if DEBUG:
@@ -96,19 +97,31 @@ WSGI_APPLICATION = 'kvartirka.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
+        # read os.environ['DATABASE_URL'] and raises ImproperlyConfigured exception if not found
+        'default': env.db(),
+        # read os.environ['SQLITE_URL']
+        'extra': env.db('SQLITE_URL', default=f'sqlite:////tmp/my-tmp-sqlite.db')
+    }
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
     }
 }
-# DATABASES = {
-#     # read os.environ['DATABASE_URL'] and raises ImproperlyConfigured exception if not found
-#     'default': env.db(),
-#     # read os.environ['SQLITE_URL']
-#     'extra': env.db('SQLITE_URL', default=f'sqlite:////tmp/my-tmp-sqlite.db')
-# }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -198,3 +211,19 @@ poetry_info = pyproject_info['tool']['poetry']
 API_TITLE: str = poetry_info['name']
 API_VERSION: str = poetry_info['version']
 API_DESCRIPTION: str = poetry_info['description']
+
+
+# Celery Configuration Options
+CELERY_TIMEZONE = "Europe/Samara"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_BROKER_URL = 'amqp://localhost'
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# change this to a proper location
+EMAIL_FILE_PATH = Path.joinpath(BASE_DIR, 'emails')
+EMAIL_INFORMER = 'info@example.com'
+
+USER_ONLINE_TIMEOUT = 300
+USER_LASTSEEN_TIMEOUT = 60 * 60
+AUTH_USER_MODEL = 'app_user.User'

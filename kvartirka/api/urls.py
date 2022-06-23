@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from .views import PostViewSet, ThreeLayerComment, CreateDeleteComment
+from .views import PostViewSet, ThreeLayerComment, CreateDeleteComment, send_test_email
 
 
 router = DefaultRouter()
@@ -25,6 +25,7 @@ urlpatterns = [
     #     'get': 'list'
     # })),
     path('', include(router.urls)),
+    path('send_email', send_test_email, name='send_test_email'),
 ]
 
 urlpatterns += [
